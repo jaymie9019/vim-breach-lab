@@ -1,0 +1,11 @@
+{
+  "name": "vim-game",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "start": "node src/cli.js",
+    "web:start": "node server.js",
+    "test": "node --test"
+  }
+}

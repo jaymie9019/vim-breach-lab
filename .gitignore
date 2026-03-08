@@ -1,0 +1,10 @@
+node_modules/
+.DS_Store
+
+.agent/
+.agents/
+skills-lock.json
+CLAUDE.md
+
+coverage/
+.nyc_output/

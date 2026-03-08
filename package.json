@@ -4,8 +4,21 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "start": "node src/cli.js",
+    "start": "bun run src/cli.tsx",
     "web:start": "node server.js",
-    "test": "node --test"
+    "test": "node --test && bun test ./tests/ui/*.test.tsx",
+    "test:core": "node --test",
+    "test:ui": "bun test ./tests/ui/*.test.tsx",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@opentui/core": "^0.1.86",
+    "@opentui/react": "^0.1.86",
+    "react": "^19.2.4"
+  },
+  "devDependencies": {
+    "@types/bun": "^1.3.10",
+    "@types/react": "^19.2.14",
+    "typescript": "^5.9.3"
   }
 }

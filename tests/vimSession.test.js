@@ -214,3 +214,33 @@ test("launchLevel can run a visual linewise rewrite challenge against system vim
   assert.deepEqual(runResult.finalCursor, level.target_state.cursor);
   assert.equal(runResult.exitCode, 0);
 });
+
+test("launchLevel can run a zero-register recall challenge against system vim", { skip: !checkVimAvailable() }, () => {
+  const level = levels.find((item) => item.id === "zero-register-recall");
+  const sandbox = buildSandbox(level);
+  const scriptInputPath = writeKeyScript('yyjdd"0pQ');
+
+  const runResult = launchLevel(level, {
+    sandbox,
+    scriptInputPath
+  });
+
+  assert.equal(runResult.finalBuffer, level.target_state.text);
+  assert.deepEqual(runResult.finalCursor, level.target_state.cursor);
+  assert.equal(runResult.exitCode, 0);
+});
+
+test("launchLevel can run a black-hole preserve challenge against system vim", { skip: !checkVimAvailable() }, () => {
+  const level = levels.find((item) => item.id === "black-hole-preserve");
+  const sandbox = buildSandbox(level);
+  const scriptInputPath = writeKeyScript('yyj"_ddpQ');
+
+  const runResult = launchLevel(level, {
+    sandbox,
+    scriptInputPath
+  });
+
+  assert.equal(runResult.finalBuffer, level.target_state.text);
+  assert.deepEqual(runResult.finalCursor, level.target_state.cursor);
+  assert.equal(runResult.exitCode, 0);
+});

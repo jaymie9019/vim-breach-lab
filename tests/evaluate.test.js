@@ -95,3 +95,17 @@ test("evaluateResult can require a double-undo sequence", () => {
   assert.equal(evaluation.techniqueMatches, false);
   assert.match(evaluation.diagnostics.technique, /缺少技法：uu/);
 });
+
+test("evaluateResult can require named register sequences", () => {
+  const level = levels.find((item) => item.id === "named-register-store");
+  const evaluation = evaluateResult(
+    level,
+    "const alpha = 1;\nconst beta = 2;\nconst alpha = 1;\nconst omega = 3;\n",
+    { line: 2, col: 0 },
+    Buffer.from('"ayyjpQ')
+  );
+
+  assert.equal(evaluation.objectivePassed, true);
+  assert.equal(evaluation.techniqueMatches, false);
+  assert.match(evaluation.diagnostics.technique, /缺少技法："ap/);
+});

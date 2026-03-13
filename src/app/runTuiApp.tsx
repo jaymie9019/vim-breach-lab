@@ -3,11 +3,22 @@ import process from "node:process";
 import { createCliRenderer } from "@opentui/core";
 import { createRoot } from "@opentui/react";
 
+import { getChapterDoc, getChapterLevels } from "../game/chapters.js";
 import { levels } from "../game/levels.js";
 import { evaluateResult } from "../tui/evaluate.js";
-import { loadProgress, recordAttempt, recordHint, saveProgress } from "../tui/progressStore.js";
+import {
+  chapterStats,
+  levelStats,
+  loadProgress,
+  recordAttempt,
+  recordChapterIntroSeen,
+  recordChapterOutroSeen,
+  recordHint,
+  saveProgress
+} from "../tui/progressStore.js";
 import { checkVimAvailable, launchLevel } from "../tui/vimSession.js";
 import { findNextLevelIndex } from "./navigation.js";
+import { ChapterGuideScreen } from "./screens/ChapterGuideScreen";
 import { MainMenuScreen } from "./screens/MainMenuScreen";
 import { LevelDetailScreen } from "./screens/LevelDetailScreen";
 import { ResultScreen } from "./screens/ResultScreen";
@@ -78,6 +89,21 @@ async function runResultScreenFlow(level: any, evaluation: any, runResult: any) 
   ));
 }
 
+async function runChapterGuide(chapter: string, mode: "intro" | "outro") {
+  const doc = getChapterDoc(chapter)?.[mode];
+  if (!doc) {
+    return { type: "continue" };
+  }
+
+  return await runScreen((finish) => (
+    <ChapterGuideScreen chapter={chapter} doc={doc} mode={mode} onAction={finish} />
+  ));
+}
+
+function isChapterCompleted(progress: any, chapter: string) {
+  return getChapterLevels(chapter).every((level) => levelStats(progress, level.id).completions > 0);
+}
+
 async function runLevelFlow(levelIndex: number, progress: any, options: { autoStart?: boolean } = {}) {
   let hintIndex = 0;
   let showAnswer = false;
@@ -85,6 +111,23 @@ async function runLevelFlow(levelIndex: number, progress: any, options: { autoSt
 
   while (true) {
     const level = levels[levelIndex];
+    const chapter = level.chapter;
+    const chapterProgress = chapterStats(progress, chapter);
+
+    if (!chapterProgress.introSeen) {
+      const introAction = await runChapterGuide(chapter, "intro");
+
+      if (introAction.type === "quit") {
+        return { action: "quit", nextLevelIndex: levelIndex, autoStart: false };
+      }
+
+      if (introAction.type === "back") {
+        return { action: "back", nextLevelIndex: levelIndex, autoStart: false };
+      }
+
+      recordChapterIntroSeen(progress, chapter);
+      saveProgress(progress);
+    }
 
     if (!autoStart) {
       const action = await runLevelDetails(level, progress, hintIndex, showAnswer);
@@ -102,6 +145,21 @@ async function runLevelFlow(levelIndex: number, progress: any, options: { autoSt
 
       if (action.type === "answer") {
         showAnswer = true;
+        continue;
+      }
+
+      if (action.type === "chapter-guide") {
+        const guideAction = await runChapterGuide(chapter, "intro");
+
+        if (guideAction.type === "quit") {
+          return { action: "quit", nextLevelIndex: levelIndex, autoStart: false };
+        }
+
+        if (guideAction.type === "continue") {
+          recordChapterIntroSeen(progress, chapter);
+          saveProgress(progress);
+        }
+
         continue;
       }
 
@@ -125,6 +183,24 @@ async function runLevelFlow(levelIndex: number, progress: any, options: { autoSt
     if (resultAction.type === "retry") {
       autoStart = true;
       continue;
+    }
+
+    const nextChapterProgress = chapterStats(progress, chapter);
+    if (evaluation.passed && !nextChapterProgress.outroSeen && isChapterCompleted(progress, chapter)) {
+      const outroAction = await runChapterGuide(chapter, "outro");
+
+      if (outroAction.type === "quit") {
+        return { action: "quit", nextLevelIndex: levelIndex, autoStart: false };
+      }
+
+      if (outroAction.type === "back") {
+        return { action: "back", nextLevelIndex: levelIndex, autoStart: false };
+      }
+
+      if (outroAction.type === "continue") {
+        recordChapterOutroSeen(progress, chapter);
+        saveProgress(progress);
+      }
     }
 
     if (resultAction.type === "next") {
@@ -172,6 +248,23 @@ export async function runTuiApp() {
 
       if (result.action === "quit") {
         return;
+      }
+
+      continue;
+    }
+
+    if (menuAction.type === "chapter-guide") {
+      selectedLevelIndex = menuAction.levelIndex ?? selectedLevelIndex;
+      const chapter = menuAction.chapter ?? levels[selectedLevelIndex].chapter;
+      const guideAction = await runChapterGuide(chapter, "intro");
+
+      if (guideAction.type === "quit") {
+        return;
+      }
+
+      if (guideAction.type === "continue") {
+        recordChapterIntroSeen(progress, chapter);
+        saveProgress(progress);
       }
 
       continue;

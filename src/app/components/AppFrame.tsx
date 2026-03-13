@@ -1,3 +1,5 @@
+import { useTerminalDimensions } from "@opentui/react";
+
 import { theme } from "../theme";
 
 export function AppFrame({
@@ -13,32 +15,39 @@ export function AppFrame({
   children: any;
   footer: any;
 }) {
+  const { width } = useTerminalDimensions();
+  const compactHeader = width < 132;
+
   return (
     <box
       width="100%"
       height="100%"
       flexDirection="column"
       backgroundColor={theme.bg}
-      padding={1}
+      paddingX={1}
+      paddingY={1}
       gap={1}
     >
       <box
-        border
-        borderStyle="double"
-        borderColor={theme.accent}
         backgroundColor={theme.panelMuted}
-        padding={1}
+        paddingX={1}
+        paddingY={1}
+        border={["bottom"]}
+        borderColor={theme.accentSoft}
+        flexDirection={compactHeader ? "column" : "row"}
+        alignItems={compactHeader ? "flex-start" : undefined}
         justifyContent="space-between"
+        gap={2}
       >
         <box flexDirection="column" flexGrow={1}>
-          <text fg={theme.accent}>
+          <text fg={theme.text}>
             <strong>{title}</strong>
           </text>
-          <text fg={theme.text}>{subtitle}</text>
+          <text fg={theme.muted}>{subtitle}</text>
         </box>
         {progressLabel ? (
-          <box border borderStyle="rounded" borderColor={theme.accentSoft} paddingX={1}>
-            <text fg={theme.warning}>{progressLabel}</text>
+          <box paddingLeft={compactHeader ? 0 : 2}>
+            <text fg={theme.accent}>{progressLabel}</text>
           </box>
         ) : null}
       </box>
@@ -49,8 +58,8 @@ export function AppFrame({
         border={["top"]}
         borderColor={theme.accentSoft}
         paddingTop={1}
-        justifyContent="space-between"
-        gap={2}
+        flexDirection="column"
+        gap={1}
       >
         {footer}
       </box>

@@ -27,9 +27,10 @@ test("MainMenuScreen renders the selected level details and navigation chrome", 
   const frame = testSetup.captureCharFrame();
 
   expect(frame).toContain("单词冲刺");
-  expect(frame).toContain("显示 1-8 / 52");
+  expect(frame).toContain("17 章 / 66 关");
+  expect(frame).toContain("第 1 章 · 精准跳转");
   expect(frame).toContain("精准跳转 · 重点 f, w");
-  expect(frame).toContain("战绩面板");
+  expect(frame).toContain("讲义主题: 看见锚点，不要手挪");
   expect(frame).toContain("`j/k` 移动");
 });
 
@@ -43,7 +44,7 @@ test("MainMenuScreen can navigate to the final levels with repeated j presses", 
     await testSetup?.renderOnce();
   });
 
-  for (let index = 0; index < 51; index += 1) {
+  for (let index = 0; index < 65; index += 1) {
     await act(async () => {
       testSetup?.renderer.stdin.emit("data", Buffer.from("j"));
       await testSetup?.renderOnce();
@@ -51,6 +52,7 @@ test("MainMenuScreen can navigate to the final levels with repeated j presses", 
   }
 
   const frame = testSetup.captureCharFrame();
-  expect(frame).toContain("贴到前面");
-  expect(frame).toContain("显示 45-52 / 52");
+  expect(frame).toContain("只清日志行");
+  expect(frame).toContain("第 17 章 · Ex 命令");
+  expect(frame).toContain("显示 54-66");
 });

@@ -7,7 +7,8 @@ const progressFile = path.join(appDir, "progress.json");
 
 function emptyProgress() {
   return {
-    byLevel: {}
+    byLevel: {},
+    byChapter: {}
   };
 }
 
@@ -42,10 +43,31 @@ export function levelStats(progress, levelId) {
   );
 }
 
+export function chapterStats(progress, chapter) {
+  return (
+    progress.byChapter?.[chapter] ?? {
+      introSeen: false,
+      outroSeen: false
+    }
+  );
+}
+
 export function recordHint(progress, levelId) {
   const stats = levelStats(progress, levelId);
   stats.hintViews += 1;
   progress.byLevel[levelId] = stats;
+}
+
+export function recordChapterIntroSeen(progress, chapter) {
+  const stats = chapterStats(progress, chapter);
+  stats.introSeen = true;
+  progress.byChapter[chapter] = stats;
+}
+
+export function recordChapterOutroSeen(progress, chapter) {
+  const stats = chapterStats(progress, chapter);
+  stats.outroSeen = true;
+  progress.byChapter[chapter] = stats;
 }
 
 export function recordAttempt(progress, levelId, evaluation) {

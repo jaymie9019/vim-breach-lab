@@ -1,19 +1,19 @@
 import { SyntaxStyle } from "@opentui/core";
 
 export const theme = {
-  bg: "#09111f",
-  panel: "#0f1c33",
-  panelAlt: "#142540",
-  panelMuted: "#0c172b",
-  accent: "#67e8f9",
-  accentSoft: "#1d4ed8",
-  success: "#34d399",
-  warning: "#fbbf24",
-  danger: "#f87171",
-  text: "#e2e8f0",
-  muted: "#94a3b8",
-  dim: "#64748b",
-  selection: "#1e3a5f"
+  bg: "#15120f",
+  panel: "#1d1914",
+  panelAlt: "#262019",
+  panelMuted: "#181410",
+  accent: "#d3b074",
+  accentSoft: "#6f5b3a",
+  success: "#8fb08a",
+  warning: "#c98c49",
+  danger: "#b97265",
+  text: "#f1e7d4",
+  muted: "#b8aa92",
+  dim: "#7c6d58",
+  selection: "#2a241c"
 };
 
 export const codeStyle = SyntaxStyle.create();

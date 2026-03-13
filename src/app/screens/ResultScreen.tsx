@@ -24,6 +24,42 @@ function resultColor(evaluation: any) {
   return theme.danger;
 }
 
+function coachSummary(evaluation: any) {
+  if (evaluation.passed) {
+    return "这次过关了，目标和手法都对上了。";
+  }
+
+  if (evaluation.objectivePassed) {
+    return "结果做对了，但这次要练的手法还没做到。";
+  }
+
+  if (evaluation.firstDiff) {
+    return `这次没过，最先出问题的是第 ${evaluation.firstDiff.line} 行。`;
+  }
+
+  if (evaluation.diagnostics.cursor) {
+    return "这次没过，主要问题是最终光标没有停在目标位置。";
+  }
+
+  return "这次没过，先从第一条判题说明开始修正。";
+}
+
+function coachNextStep(level: any, evaluation: any) {
+  if (evaluation.passed) {
+    return "可以直接进下一关，继续保持动作短、稳、能复现。";
+  }
+
+  if (!evaluation.techniqueMatches && level.required_sequences?.length) {
+    return `重试时先刻意打出要求技法：${level.required_sequences.map(formatSequence).join(" / ")}。`;
+  }
+
+  if (evaluation.firstDiff) {
+    return `先盯住第 ${evaluation.firstDiff.line} 行，把文本修对，再检查光标落点。`;
+  }
+
+  return "重试时先只盯目标文本和最终光标，不要一次修所有问题。";
+}
+
 export function ResultScreen({
   level,
   evaluation,
@@ -65,98 +101,74 @@ export function ResultScreen({
       footer={
         <>
           <text fg={theme.muted}>`r` 重试  `{hasNextLevel ? "n" : "-"}` 下一关  `b` 返回列表</text>
-          <text fg={theme.dim}>沙盒目录: {runResult.sandbox.sandboxDir}</text>
+          <text fg={theme.dim}>先改最先出错的地方，再谈步数和手法。</text>
         </>
       }
     >
       <box flexDirection="column" flexGrow={1} gap={1}>
-        <box flexDirection={isWide ? "row" : "column"} gap={1} flexShrink={0}>
-          <Panel
-            title="判定"
-            subtitle="是否完成任务和训练要求。"
-            accent={accent}
-            grow={1}
-            height={isWide ? 7 : "auto"}
-          >
-            <scrollbox flexGrow={1}>
-              <box flexDirection="column" gap={1}>
-                <text fg={accent}>
-                  <strong>{evaluation.objectivePassed ? "任务通过" : "任务未通过"}</strong>
+        <Panel
+          title={evaluation.passed ? "教练结论" : "先改这里"}
+          subtitle={coachSummary(evaluation)}
+          accent={accent}
+          grow={0}
+        >
+          <box flexDirection={isWide ? "row" : "column"} justifyContent="space-between" gap={1}>
+            <box flexDirection="column" flexGrow={1} gap={1}>
+              <text fg={accent}>
+                <strong>{evaluation.passed ? "训练通过" : "继续修正"}</strong>
+              </text>
+              <text fg={theme.text}>{coachSummary(evaluation)}</text>
+              <text fg={theme.muted}>{coachNextStep(level, evaluation)}</text>
+            </box>
+            <box flexDirection="column" width={isWide ? 28 : undefined} gap={1}>
+              <text fg={theme.text}>步数 {evaluation.keylog.scoredMoves} / Par {level.par_moves}</text>
+              <text fg={theme.text}>训练目标 {evaluation.techniqueMatches ? "达成" : "未达成"}</text>
+              <text fg={theme.muted}>退出方式: {evaluation.keylog.quitStrategy ?? "未识别"}</text>
+            </box>
+          </box>
+        </Panel>
+
+        <box flexDirection={isWide ? "row" : "column"} gap={2} flexGrow={1}>
+          <Panel title="哪里出错了" subtitle="先只看最关键的偏差。" accent={theme.warning} grow={1}>
+            <box flexDirection="column" gap={1}>
+              {evaluation.firstDiff ? (
+                <text fg={theme.warning}>
+                  首个差异: 第 {evaluation.firstDiff.line} 行 | 目标 `{evaluation.firstDiff.expected}` | 实际 `{evaluation.firstDiff.actual}`
                 </text>
-                <text fg={theme.text}>训练目标: {evaluation.techniqueMatches ? "达成" : "未达成"}</text>
-                <text fg={theme.text}>步数: {evaluation.keylog.scoredMoves} / Par {level.par_moves}</text>
-                <text fg={theme.muted}>退出方式: {evaluation.keylog.quitStrategy ?? "未识别"}</text>
-              </box>
-            </scrollbox>
-          </Panel>
-
-          <Panel
-            title="定位"
-            subtitle="最后停在哪里。"
-            accent={theme.warning}
-            grow={1}
-            height={isWide ? 7 : "auto"}
-          >
-            <scrollbox flexGrow={1}>
-              <box flexDirection="column" gap={1}>
-                <text fg={theme.text}>最终光标: {formatCursor(evaluation.actualCursor)}</text>
-                <text fg={theme.text}>目标光标: {formatCursor(evaluation.expectedCursor)}</text>
-                <text fg={theme.muted}>文本: {evaluation.diagnostics.text}</text>
-                <text fg={theme.muted}>技法: {evaluation.diagnostics.technique}</text>
-              </box>
-            </scrollbox>
-          </Panel>
-
-          <Panel
-            title="推荐解法"
-            subtitle="建议对照自己的 keylog 看偏差。"
-            accent={theme.accent}
-            grow={1}
-            height={isWide ? 7 : "auto"}
-          >
-            <scrollbox flexGrow={1}>
-              <box flexDirection="column" gap={1}>
-                <text fg={theme.text}>{formatSequence(level.recommended_solution)}</text>
-                {evaluation.firstDiff ? (
-                  <text fg={theme.warning}>
-                    首个差异: 第 {evaluation.firstDiff.line} 行 | 目标 `{evaluation.firstDiff.expected}` | 实际 `{evaluation.firstDiff.actual}`
-                  </text>
-                ) : (
-                  <text fg={theme.muted}>文本没有首个差异，当前主要看光标或技法。</text>
-                )}
-              </box>
-            </scrollbox>
-          </Panel>
-        </box>
-
-        <box flexDirection={isWide ? "row" : "column"} flexGrow={1} gap={1}>
-          <Panel title="Diff" subtitle="目标文本 vs 实际结果。" accent={theme.accentSoft} grow={1}>
-            <scrollbox flexGrow={1}>
-              <box flexDirection="column">
-                <text fg={theme.text}>{renderDiff(evaluation.diff)}</text>
-              </box>
-            </scrollbox>
-          </Panel>
-
-          <box flexDirection="column" width={isWide ? 48 : undefined} gap={1}>
-            <Panel title="计分按键" subtitle="退出按键已从计分里剥离。" accent={theme.success} grow={1}>
+              ) : (
+                <text fg={theme.muted}>文本没有首个差异，当前优先检查光标或技法要求。</text>
+              )}
+              <text fg={theme.text}>最终光标: {formatCursor(evaluation.actualCursor)}</text>
+              <text fg={theme.text}>目标光标: {formatCursor(evaluation.expectedCursor)}</text>
+              <text fg={theme.muted}>文本判定: {evaluation.diagnostics.text}</text>
+              <text fg={theme.muted}>技法判定: {evaluation.diagnostics.technique}</text>
               <scrollbox flexGrow={1}>
                 <box flexDirection="column">
-                  <text fg={theme.text}>{evaluation.keylog.displayForScore || "(未采集到训练按键)"}</text>
+                  <text fg={theme.text}>{renderDiff(evaluation.diff)}</text>
                 </box>
               </scrollbox>
+            </box>
+          </Panel>
+
+          <box flexDirection="column" width={isWide ? 46 : undefined} gap={1}>
+            <Panel title="推荐怎么改" subtitle="先按这个顺序复盘。" accent={theme.accent} grow={1}>
+              <box flexDirection="column" gap={1}>
+                <text fg={theme.text}>推荐解法: {formatSequence(level.recommended_solution)}</text>
+                {evaluation.reasons.length ? (
+                  evaluation.reasons.map((reason: string, index: number) => (
+                    <text key={`${index}-${reason}`} fg={theme.text}>{index + 1}. {reason}</text>
+                  ))
+                ) : (
+                  <text fg={theme.success}>这次没有额外判题问题，继续保持这个节奏。</text>
+                )}
+              </box>
             </Panel>
 
-            <Panel title="判题说明" subtitle="失败时先看这里。" accent={theme.warning} grow={1}>
+            <Panel title="按键记录" subtitle="退出按键已从计分里剥离。" accent={theme.success} grow={1} framed={false}>
               <scrollbox flexGrow={1}>
                 <box flexDirection="column" gap={1}>
-                  {evaluation.reasons.length ? (
-                    evaluation.reasons.map((reason: string, index: number) => (
-                      <text key={`${index}-${reason}`} fg={theme.text}>- {reason}</text>
-                    ))
-                  ) : (
-                    <text fg={theme.success}>这次没有额外判题说明，说明目标状态和技法要求都对齐了。</text>
-                  )}
+                  <text fg={theme.text}>{evaluation.keylog.displayForScore || "(未采集到训练按键)"}</text>
+                  <text fg={theme.dim}>沙盒目录: {runResult.sandbox.sandboxDir}</text>
                 </box>
               </scrollbox>
             </Panel>

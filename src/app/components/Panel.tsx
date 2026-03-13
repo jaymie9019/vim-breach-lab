@@ -6,6 +6,7 @@ export function Panel({
   children,
   accent = theme.accent,
   grow = 0,
+  framed = true,
   width,
   height
 }: {
@@ -14,6 +15,7 @@ export function Panel({
   children: any;
   accent?: string;
   grow?: number;
+  framed?: boolean;
   width?: number | `${number}%` | "auto";
   height?: number | `${number}%` | "auto";
 }) {
@@ -24,14 +26,15 @@ export function Panel({
       width={width}
       height={height}
       overflow="hidden"
-      border
-      borderStyle="rounded"
-      borderColor={accent}
-      backgroundColor={theme.panel}
-      padding={1}
+      border={framed ? ["left"] : undefined}
+      borderColor={framed ? accent : undefined}
+      backgroundColor={framed ? theme.panel : "transparent"}
+      paddingLeft={framed ? 1 : 0}
+      paddingRight={framed ? 1 : 0}
+      paddingY={framed ? 1 : 0}
       gap={1}
     >
-      <box flexDirection="column">
+      <box flexDirection="column" gap={0}>
         <text fg={accent}>
           <strong>{title}</strong>
         </text>

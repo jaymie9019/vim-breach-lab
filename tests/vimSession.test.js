@@ -244,3 +244,152 @@ test("launchLevel can run a black-hole preserve challenge against system vim", {
   assert.deepEqual(runResult.finalCursor, level.target_state.cursor);
   assert.equal(runResult.exitCode, 0);
 });
+
+test("launchLevel can run a mark exact-return challenge against system vim", { skip: !checkVimAvailable() }, () => {
+  const level = levels.find((item) => item.id === "mark-anchor-return");
+  const sandbox = buildSandbox(level);
+  const scriptInputPath = writeKeyScript("ma/draft\nci\"live\u001b`aQ");
+
+  const runResult = launchLevel(level, {
+    sandbox,
+    scriptInputPath
+  });
+
+  assert.equal(runResult.finalBuffer, level.target_state.text);
+  assert.deepEqual(runResult.finalCursor, level.target_state.cursor);
+  assert.equal(runResult.exitCode, 0);
+});
+
+test("launchLevel can run a jump-list return challenge against system vim", { skip: !checkVimAvailable() }, () => {
+  const level = levels.find((item) => item.id === "line-jump-back");
+  const sandbox = buildSandbox(level);
+  const scriptInputPath = writeKeyScript("/draft\nci\"ready\u001b''Q");
+
+  const runResult = launchLevel(level, {
+    sandbox,
+    scriptInputPath
+  });
+
+  assert.equal(runResult.finalBuffer, level.target_state.text);
+  assert.deepEqual(runResult.finalCursor, level.target_state.cursor);
+  assert.equal(runResult.exitCode, 0);
+});
+
+test("launchLevel can run a lowercase transform challenge against system vim", { skip: !checkVimAvailable() }, () => {
+  const level = levels.find((item) => item.id === "lowercase-normalize");
+  const sandbox = buildSandbox(level);
+
+  const runResult = launchLevel(level, {
+    sandbox,
+    normalCommand: "guw"
+  });
+
+  assert.equal(runResult.finalBuffer, level.target_state.text);
+  assert.deepEqual(runResult.finalCursor, level.target_state.cursor);
+  assert.equal(runResult.exitCode, 0);
+});
+
+test("launchLevel can run an insert-return challenge against system vim", { skip: !checkVimAvailable() }, () => {
+  const level = levels.find((item) => item.id === "insert-return");
+  const sandbox = buildSandbox(level);
+  const scriptInputPath = writeKeyScript("iHello\u001b0gi, world\u001bQ");
+
+  const runResult = launchLevel(level, {
+    sandbox,
+    scriptInputPath
+  });
+
+  assert.equal(runResult.finalBuffer, level.target_state.text);
+  assert.deepEqual(runResult.finalCursor, level.target_state.cursor);
+  assert.equal(runResult.exitCode, 0);
+});
+
+test("launchLevel can run a visual reselect challenge against system vim", { skip: !checkVimAvailable() }, () => {
+  const level = levels.find((item) => item.id === "visual-reselect");
+  const sandbox = buildSandbox(level);
+  const scriptInputPath = writeKeyScript("veygvclive\u001bQ");
+
+  const runResult = launchLevel(level, {
+    sandbox,
+    scriptInputPath
+  });
+
+  assert.equal(runResult.finalBuffer, level.target_state.text);
+  assert.deepEqual(runResult.finalCursor, level.target_state.cursor);
+  assert.equal(runResult.exitCode, 0);
+});
+
+test("launchLevel can run a change-history backward challenge against system vim", { skip: !checkVimAvailable() }, () => {
+  const level = levels.find((item) => item.id === "change-history-back");
+  const sandbox = buildSandbox(level);
+  const scriptInputPath = writeKeyScript("/draft\nci\"live\u001bnci\"live\u001bggg;Q");
+
+  const runResult = launchLevel(level, {
+    sandbox,
+    scriptInputPath
+  });
+
+  assert.equal(runResult.finalBuffer, level.target_state.text);
+  assert.deepEqual(runResult.finalCursor, level.target_state.cursor);
+  assert.equal(runResult.exitCode, 0);
+});
+
+test("launchLevel can run a single-line ex substitution challenge against system vim", { skip: !checkVimAvailable() }, () => {
+  const level = levels.find((item) => item.id === "sub-once");
+  const sandbox = buildSandbox(level);
+  const scriptInputPath = writeKeyScript(":s/draft/live/\nQ");
+
+  const runResult = launchLevel(level, {
+    sandbox,
+    scriptInputPath
+  });
+
+  assert.equal(runResult.finalBuffer, level.target_state.text);
+  assert.deepEqual(runResult.finalCursor, level.target_state.cursor);
+  assert.equal(runResult.exitCode, 0);
+});
+
+test("launchLevel can run a global ex delete challenge against system vim", { skip: !checkVimAvailable() }, () => {
+  const level = levels.find((item) => item.id === "global-prune");
+  const sandbox = buildSandbox(level);
+  const scriptInputPath = writeKeyScript(":g/^debug/d\nQ");
+
+  const runResult = launchLevel(level, {
+    sandbox,
+    scriptInputPath
+  });
+
+  assert.equal(runResult.finalBuffer, level.target_state.text);
+  assert.deepEqual(runResult.finalCursor, level.target_state.cursor);
+  assert.equal(runResult.exitCode, 0);
+});
+
+test("launchLevel can run a file-wide ex substitution challenge against system vim", { skip: !checkVimAvailable() }, () => {
+  const level = levels.find((item) => item.id === "sub-global");
+  const sandbox = buildSandbox(level);
+  const scriptInputPath = writeKeyScript(":%s/colour/color/g\nQ");
+
+  const runResult = launchLevel(level, {
+    sandbox,
+    scriptInputPath
+  });
+
+  assert.equal(runResult.finalBuffer, level.target_state.text);
+  assert.deepEqual(runResult.finalCursor, level.target_state.cursor);
+  assert.equal(runResult.exitCode, 0);
+});
+
+test("launchLevel can run an ex normal batch challenge against system vim", { skip: !checkVimAvailable() }, () => {
+  const level = levels.find((item) => item.id === "norm-batch");
+  const sandbox = buildSandbox(level);
+  const scriptInputPath = writeKeyScript(":%norm A;\nQ");
+
+  const runResult = launchLevel(level, {
+    sandbox,
+    scriptInputPath
+  });
+
+  assert.equal(runResult.finalBuffer, level.target_state.text);
+  assert.deepEqual(runResult.finalCursor, level.target_state.cursor);
+  assert.equal(runResult.exitCode, 0);
+});
